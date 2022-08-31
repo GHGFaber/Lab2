@@ -31,7 +31,7 @@ class Box {
 public:
 	float w;
 	float dir;
-	float vel[2];  //vector2
+	float vel[2];  
 	float pos[2];
 	Box() {
 	    w = 20.0f;
@@ -311,8 +311,13 @@ void physics()
 		    particles[i].vel[0] += 0.01;
 	}
 	if (particles[i].pos[1] < 0.0) {
-	    particles[i] = particles[n];
-	    --n;
+#define OPT_1
+#ifndef OPT_1
+	    //particles[i] = particles[n-1];			//old code
+	    //--n;
+#else // OPT_1
+	    particles[i] = particles[--n];
+#endif //OPT_1
 	}
     }
 }
