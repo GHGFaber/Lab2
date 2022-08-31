@@ -1,9 +1,9 @@
-//modified by:
-//date:
+//modified by: Moises B. Fuentes
+//date: August 31, 2022
 //
 //author: Gordon Griesel
 //date: Spring 2022
-//purpose: get openGL working on your personal computer
+//purpose: Waterfall Model
 //
 #include <iostream>
 using namespace std;
