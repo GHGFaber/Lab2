@@ -16,6 +16,8 @@ using namespace std;
 #include <X11/Xlib.h>
 #include <X11/keysym.h>
 #include <GL/glx.h>
+//#include "fonts.h"
+
 
 const int MAX_PARTICLES = 1000;
 
@@ -30,14 +32,16 @@ public:
 class Box {
 public:
 	float w;
+	float h;
 	float dir;
 	float vel[2];  
 	float pos[2];
 	Box() {
-	    w = 20.0f;
+	    w = 100.0f;
+	    h = 20.0f;
 	    dir = 25.0f;
-	    pos[0] = g.xres / 2.0f;
-	    pos[1] = g.yres / 2.0f;
+	    pos[0] = 10.0f + w;
+	    pos[1] = 750.0f;
 	    vel[0] = vel[1] = 0.0f;
 	}
 	Box(float width, float d, float p0, float p1) {
@@ -103,8 +107,8 @@ int main()
 
 Global::Global()
 {
-	xres = 400;
-	yres = 200;
+	xres = 1000;
+	yres = 800;
 }
 
 X11_wrapper::~X11_wrapper()
@@ -284,6 +288,7 @@ void init_opengl(void)
 
 void physics()
 {
+    /*
     particle.vel[1] -= 0.01;
     particle.pos[0] += particle.vel[0];
     particle.pos[1] += particle.vel[1];
@@ -291,11 +296,12 @@ void physics()
     // check for collision
     if (particle.pos[1] < (box.pos[1] + box.w) &&
 	particle.pos[1] > (box.pos[1] - box.w) &&
-        particle.pos[0] > (box.pos[0] - box.w) &&
-	particle.pos[0] < (box.pos[0] + box.w)) {
+        particle.pos[0] > (box.pos[0] - box.h) &&
+	particle.pos[0] < (box.pos[0] + box.h)) {
 		particle.vel[1] = 0.0;
 		particle.vel[0] += 0.01;
     }
+    */
     //TODO: Ise while loop to process moved array element
     for (int i = 0; i < n; i++) {
 	particles[i].vel[1] -= 0.01;
@@ -303,8 +309,8 @@ void physics()
 	particles[i].pos[1] += particles[i].vel[1];
 	//
 	// check for collision
-	if (particles[i].pos[1] < (box.pos[1] + box.w) &&
-	    particles[i].pos[1] > (box.pos[1] - box.w) &&
+	if (particles[i].pos[1] < (box.pos[1] + box.h) &&
+	    particles[i].pos[1] > (box.pos[1] - box.h) &&
 	    particles[i].pos[0] > (box.pos[0] - box.w) &&
 	    particles[i].pos[0] < (box.pos[0] + box.w)) {
 		    particles[i].vel[1] = 0.0;
@@ -327,14 +333,16 @@ void render()
 	//
 	glClear(GL_COLOR_BUFFER_BIT);
 	//Draw box.
+	//
+	//Rect
 	glPushMatrix();
 	glColor3ub(0, 160, 220);
 	glTranslatef(box.pos[0], box.pos[1], 0.0f); //move it somewhere
 	glBegin(GL_QUADS);
-		glVertex2f(-box.w, -box.w);
-		glVertex2f(-box.w,  box.w);
-		glVertex2f( box.w,  box.w);
-		glVertex2f( box.w, -box.w);
+		glVertex2f(-box.w, -box.h);
+		glVertex2f(-box.w,  box.h);
+		glVertex2f( box.w,  box.h);
+		glVertex2f( box.w, -box.h);
 	glEnd();
 	glPopMatrix();
 
