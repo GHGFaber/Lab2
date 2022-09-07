@@ -16,8 +16,8 @@ using namespace std;
 #include <X11/Xlib.h>
 #include <X11/keysym.h>
 #include <GL/glx.h>
-//#include "fonts.h"
-
+#include "log.h"
+#include "fonts.h"
 
 const int MAX_PARTICLES = 1000;
 
@@ -38,20 +38,21 @@ public:
 	float pos[2];
 	Box() {
 	    w = 100.0f;
-	    h = 20.0f;
+		h = 20.0f;
 	    dir = 25.0f;
-	    pos[0] = 10.0f + w;
-	    pos[1] = 750.0f;
+	    pos[0] = g.xres / 2.0f;
+	    pos[1] = g.yres / 2.0f;
 	    vel[0] = vel[1] = 0.0f;
 	}
-	Box(float width, float d, float p0, float p1) {
+	Box(float width, float height, float d, float p0, float p1) {
 	    dir = d;
 	    w = width;
+        h = height;
 	    pos[0] = p0;
 	    pos[1] = p1;
 	    vel[0] = vel[1] = 0.0;
 	}
-} box, particle(4.0f, 0.0f, g.xres / 2.0f, g.yres / 4.0f * 3.0f);
+} box, particle(4.0f, 4.0f, 0.0f, g.xres / 2.0f, g.yres / 4.0f * 3.0f), box1(100.0f, 20.0f, 0.0f, 100, 700), box2(100.0f, 20.0f, 0.0f, 350, 600), box3(100.0f, 20.0f, 0.0f, 600, 500), box4(100.0f, 20.0f, 0.0f, 850, 400), box5(100.0f, 20.0f, 0.0f, 1100, 300); 
 
 Box particles[MAX_PARTICLES];
 int n = 0; //number of elements
@@ -86,6 +87,7 @@ void render(void);
 //=====================================
 int main()
 {
+	logOpen();
 	init_opengl();
 	//Main loop
 	int done = 0;
@@ -102,12 +104,14 @@ int main()
 		x11.swapBuffers();
 		usleep(200);
 	}
+	cleanup_fonts();
+	logClose();
 	return 0;
 }
 
 Global::Global()
 {
-	xres = 1000;
+	xres = 1500;
 	yres = 800;
 }
 
@@ -201,16 +205,16 @@ void X11_wrapper::check_resize(XEvent *e)
 
 void make_particle(int x, int y)
 {
-    if (n >= MAX_PARTICLES) {
-	return;
-    }
-    printf("make particle(%i, %i)\n", x, y); fflush(stdout);
-    particles[n].w = 4.0;
-    particles[n].pos[0] = x;
-    particles[n].pos[1] = y;
-    particles[n].vel[0] = particles[n].vel[1] = 0.0f;
-    ++n;
-    printf("n: %i\n", n); fflush(stdout);
+	if (n >= MAX_PARTICLES) {
+		return;
+	}
+	printf("make particle(%i, %i)\n", x, y); fflush(stdout);
+	particles[n].w = 4.0;
+	particles[n].pos[0] = x;
+	particles[n].pos[1] = y;
+	particles[n].vel[0] = particles[n].vel[1] = 0.0f;
+	++n;
+	printf("n: %i\n", n); fflush(stdout);
 
 }
 void X11_wrapper::check_mouse(XEvent *e)
@@ -284,37 +288,68 @@ void init_opengl(void)
 	glOrtho(0, g.xres, 0, g.yres, -1, 1);
 	//Set the screen background color
 	glClearColor(0.1, 0.1, 0.1, 1.0);
+	glEnable(GL_TEXTURE_2D);
+	initialize_fonts();
 }
 
 void physics()
 {
-    /*
-    particle.vel[1] -= 0.01;
-    particle.pos[0] += particle.vel[0];
-    particle.pos[1] += particle.vel[1];
-    //
-    // check for collision
-    if (particle.pos[1] < (box.pos[1] + box.w) &&
-	particle.pos[1] > (box.pos[1] - box.w) &&
-        particle.pos[0] > (box.pos[0] - box.h) &&
-	particle.pos[0] < (box.pos[0] + box.h)) {
-		particle.vel[1] = 0.0;
-		particle.vel[0] += 0.01;
+	/*
+	particle.vel[1] -= 0.01;
+       	particle.pos[0] += particle.vel[0];
+	particle.pos[1] += particle.vel[1];
+	//
+	//check for collision
+	if (particle.pos[1] < (box.pos[1] + box.w) &&
+		particle.pos[1] > (box.pos[1] - box.w) &&
+		particle.pos[0] > (box.pos[0] - box.w) &&
+		particle.pos[0] < (box.pos[0] + box.w)) {
+			particle.vel[1] = 0.0;
+			particle.vel[0] += 0.01;
     }
-    */
-    //TODO: Ise while loop to process moved array element
+	*/
     for (int i = 0; i < n; i++) {
-	particles[i].vel[1] -= 0.01;
+	particles[i].vel[1] -= 0.02;
 	particles[i].pos[0] += particles[i].vel[0];
 	particles[i].pos[1] += particles[i].vel[1];
-	//
 	// check for collision
-	if (particles[i].pos[1] < (box.pos[1] + box.h) &&
-	    particles[i].pos[1] > (box.pos[1] - box.h) &&
-	    particles[i].pos[0] > (box.pos[0] - box.w) &&
-	    particles[i].pos[0] < (box.pos[0] + box.w)) {
+	if (particles[i].pos[1] < (box1.pos[1] + box1.h) &&
+	    particles[i].pos[1] > (box1.pos[1] - box1.h) &&
+	    particles[i].pos[0] > (box1.pos[0] - box1.w) &&
+	    particles[i].pos[0] < (box1.pos[0] + box1.w)) {
 		    particles[i].vel[1] = 0.0;
 		    particles[i].vel[0] += 0.01;
+	} 
+    else if (particles[i].pos[1] < (box2.pos[1] + box2.h) &&
+	         particles[i].pos[1] > (box2.pos[1] - box2.h) &&
+	         particles[i].pos[0] > (box2.pos[0] - box2.w) &&
+	         particles[i].pos[0] < (box2.pos[0] + box2.w)) {
+		     particles[i].vel[1] = 0.0;
+		     particles[i].vel[0] += 0.01;
+	}
+
+    else if (particles[i].pos[1] < (box3.pos[1] + box3.h) &&
+	         particles[i].pos[1] > (box3.pos[1] - box3.h) &&
+	         particles[i].pos[0] > (box3.pos[0] - box3.w) &&
+	         particles[i].pos[0] < (box3.pos[0] + box3.w)) {
+		     particles[i].vel[1] = 0.0;
+		     particles[i].vel[0] += 0.01;
+	}
+
+    else if (particles[i].pos[1] < (box4.pos[1] + box4.h) &&
+	         particles[i].pos[1] > (box4.pos[1] - box4.h) &&
+	         particles[i].pos[0] > (box4.pos[0] - box4.w) &&
+	         particles[i].pos[0] < (box4.pos[0] + box4.w)) {
+		     particles[i].vel[1] = 0.0;
+		     particles[i].vel[0] += 0.01;
+	}
+
+    else if (particles[i].pos[1] < (box5.pos[1] + box5.h) &&
+	         particles[i].pos[1] > (box5.pos[1] - box5.h) &&
+	         particles[i].pos[0] > (box5.pos[0] - box5.w) &&
+	         particles[i].pos[0] < (box5.pos[0] + box5.w)) {
+		     particles[i].vel[1] = 0.0;
+		     particles[i].vel[0] += 0.01;
 	}
 	if (particles[i].pos[1] < 0.0) {
 #define OPT_1
@@ -330,21 +365,89 @@ void physics()
 
 void render()
 {
+	Rect b1;
 	//
 	glClear(GL_COLOR_BUFFER_BIT);
-	//Draw box.
-	//
-	//Rect
+	//Draw box1
 	glPushMatrix();
 	glColor3ub(0, 160, 220);
-	glTranslatef(box.pos[0], box.pos[1], 0.0f); //move it somewhere
+	glTranslatef(box1.pos[0], box1.pos[1], 0.0f); //move it somewhere
 	glBegin(GL_QUADS);
-		glVertex2f(-box.w, -box.h);
-		glVertex2f(-box.w,  box.h);
-		glVertex2f( box.w,  box.h);
-		glVertex2f( box.w, -box.h);
+		glVertex2f(-box1.w, -box1.h);
+		glVertex2f(-box1.w,  box1.h);
+		glVertex2f( box1.w,  box1.h);
+		glVertex2f( box1.w, -box1.h);
 	glEnd();
 	glPopMatrix();
+
+	b1.bot = box1.pos[1];
+	b1.left = box1.pos[0] - 80;
+	b1.center = 0;
+	ggprint16(&b1, 2, 0x00ffff00, "Requirements");
+
+	glPushMatrix();
+	glColor3ub(0, 160, 220);
+	glTranslatef(box2.pos[0], box2.pos[1], 0.0f); //move it somewhere
+	glBegin(GL_QUADS);
+		glVertex2f(-box2.w, -box2.h);
+		glVertex2f(-box2.w,  box2.h);
+		glVertex2f( box2.w,  box2.h);
+		glVertex2f( box2.w, -box2.h);
+	glEnd(); 
+	glPopMatrix();
+
+	b1.bot = box2.pos[1];
+	b1.left = box2.pos[0] - 80;
+	b1.center = 0;
+	ggprint16(&b1, 2, 0x00ffff00, "Design");
+
+	glPushMatrix();
+	glColor3ub(0, 160, 220);
+	glTranslatef(box3.pos[0], box3.pos[1], 0.0f); //move it somewhere
+	glBegin(GL_QUADS);
+		glVertex2f(-box3.w, -box3.h);
+		glVertex2f(-box3.w,  box3.h);
+		glVertex2f( box3.w,  box3.h);
+		glVertex2f( box3.w, -box3.h);
+	glEnd();
+	glPopMatrix();
+
+	b1.bot = box3.pos[1];
+	b1.left = box3.pos[0] - 80;
+	b1.center = 0;
+	ggprint16(&b1, 2, 0x00ffff00, "Code");
+
+	glPushMatrix();
+	glColor3ub(0, 160, 220);
+	glTranslatef(box4.pos[0], box4.pos[1], 0.0f); //move it somewhere
+	glBegin(GL_QUADS);
+		glVertex2f(-box4.w, -box4.h);
+		glVertex2f(-box4.w,  box4.h);
+		glVertex2f( box4.w,  box4.h);
+		glVertex2f( box4.w, -box4.h);
+	glEnd(); 
+	glPopMatrix();
+
+	b1.bot = box4.pos[1];
+	b1.left = box4.pos[0] - 80;
+	b1.center = 0;
+	ggprint16(&b1, 2, 0x00ffff00, "Test");
+
+	glPushMatrix();
+	glColor3ub(0, 160, 220);
+	glTranslatef(box5.pos[0], box5.pos[1], 0.0f); //move it somewhere
+	glBegin(GL_QUADS);
+		glVertex2f(-box5.w, -box5.h);
+		glVertex2f(-box5.w,  box5.h);
+		glVertex2f( box5.w,  box5.h);
+		glVertex2f( box5.w, -box5.h);
+	glEnd(); 
+	glPopMatrix();
+
+	b1.bot = box5.pos[1];
+	b1.left = box5.pos[0] - 80;
+	b1.center = 0;
+	ggprint16(&b1, 2, 0x00ffff00, "Maintenance");
 
 	for (int i = 0; i < n; i++) {
 	    glPushMatrix();
